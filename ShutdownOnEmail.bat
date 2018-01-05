@@ -1,0 +1,1 @@
+PowerShell -NoProfile -ExecutionPolicy Bypass -Command "& 'C:\Users\Jamie\Desktop\PcManagmentScripts\ShutDownOnEmail.ps1'";
