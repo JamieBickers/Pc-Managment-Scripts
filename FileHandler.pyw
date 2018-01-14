@@ -5,6 +5,7 @@ import random
 import shutil
 import xml.etree.ElementTree as ET
 import time
+import subprocess
 
 def all_files():
     all_files_and_dirs = os.listdir("C:\\Users\\Jamie\\Desktop\\Gifs")
@@ -33,20 +34,27 @@ def add_file_data_to_database(file_type, file_new_name):
     root.append(new_element)
     tree.write("C:\\Users\\Jamie\\Desktop\\Gifs\\Database\\FileData.xml", xml_declaration=True)
     
-def handle_all_files():
-    files = all_files()
+def handle_all_files(files):
     for file in files:
         new_name = get_new_file_name()
         original_name, extension = os.path.splitext(file)
         add_file_data_to_database(original_name, new_name + extension)
         move_and_rename_file(file, new_name + extension)
+        
+def move_to_pi_and_delete():
+    all_files = os.listdir("C:\\Users\\Jamie\\Desktop\\Gifs\\Handled")
+    for file in all_files:
+        subprocess.Popen(["powershell.exe", ".\MoveFileToPiAndDelete.ps1", file])
             
 def main():
     for i in range(0, 360):
+        files = all_files()
         try:
-			handle_all_files()
-			time.sleep(10)
+            handle_all_files(files)
+            time.sleep(10)
         except:
             time.sleep(10)
+            
+    move_to_pi_and_delete()
         
-main()
+#main()
