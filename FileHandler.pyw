@@ -44,7 +44,12 @@ def handle_all_files(files):
 def move_to_pi_and_delete():
     all_files = os.listdir("C:\\Users\\Jamie\\Desktop\\Gifs\\Handled")
     for file in all_files:
-        subprocess.Popen(["powershell.exe", ".\MoveFileToPiAndDelete.ps1", file])
+        try:
+            subprocess.Popen(["powershell.exe", ".\MoveFileToPiAndDelete.ps1", file])
+        except:
+            pass
+			
+    subprocess.Popen(["powershell.exe", ".\MoveFileToPiAndDelete.ps1", "FileData.xml", "true"])
             
 def main():
     for i in range(0, 360):
@@ -54,7 +59,8 @@ def main():
             time.sleep(10)
         except:
             time.sleep(10)
-            
-    move_to_pi_and_delete()
+          
+    if len(os.listdir("C:\\Users\\Jamie\\Desktop\\Gifs\\Handled")) > 5:
+        move_to_pi_and_delete()
         
-#main()
+main()
