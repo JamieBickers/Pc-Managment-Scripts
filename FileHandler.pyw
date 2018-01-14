@@ -42,14 +42,7 @@ def handle_all_files(files):
         move_and_rename_file(file, new_name + extension)
         
 def move_to_pi_and_delete():
-    all_files = os.listdir("C:\\Users\\Jamie\\Desktop\\Gifs\\Handled")
-    for file in all_files:
-        try:
-            subprocess.Popen(["powershell.exe", ".\MoveFileToPiAndDelete.ps1", file])
-        except:
-            pass
-			
-    subprocess.Popen(["powershell.exe", ".\MoveFileToPiAndDelete.ps1", "FileData.xml", "true"])
+    subprocess.Popen(["powershell.exe", ".\MoveFilesToPiAndDelete.ps1"])
             
 def main():
     for i in range(0, 360):
