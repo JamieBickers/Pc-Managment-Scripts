@@ -43,10 +43,10 @@ def handle_all_files():
             
 def main():
     for i in range(0, 360):
-        #try:
-        handle_all_files()
-        time.sleep(10)
-        #except:
-            #time.sleep(10)
+        try:
+			handle_all_files()
+			time.sleep(10)
+        except:
+            time.sleep(10)
         
 main()
