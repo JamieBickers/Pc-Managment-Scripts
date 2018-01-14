@@ -7,12 +7,10 @@ import RPi.GPIO as GPIO
 import time
 
 def start_pc():
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setwarnings(False)
-    GPIO.setup(18, GPIO.OUT)
-    GPIO.output(18, GPIO.HIGH)
-    time.sleep(1)
+    print("starting...")
     GPIO.output(18, GPIO.LOW)
+    time.sleep(1)
+    GPIO.output(18, GPIO.HIGH)
     
 def time_of_last_startup_email():
     server= imaplib.IMAP4_SSL("imap.gmail.com")
@@ -37,18 +35,26 @@ def write_last_startup_time_to_file(date):
         file.write(str(date))
 
 def main():
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
+    GPIO.setup(18, GPIO.OUT)
+    GPIO.output(18, GPIO.HIGH)
     try:
         handled_times = [read_last_startup_time_from_file()]
     except:
         handled_times = []
     for i in range(0, 360):
-        time_of_email = time_of_last_startup_email()
-        difference = datetime.now()-time_of_email
-        if difference.total_seconds() < 180:
-            if time_of_email not in handled_times:
-                start_pc()
-                handled_times = [time_of_email]
-                write_last_startup_time_to_file(time_of_email)
+        try:
+            time_of_email = time_of_last_startup_email()
+            difference = datetime.now()-time_of_email
+            if difference.total_seconds() < 180:
+                if time_of_email not in handled_times:
+                    start_pc()
+                    handled_times = [time_of_email]
+                    write_last_startup_time_to_file(time_of_email)
+        except:
+            pass
+        
         time.sleep(10)
 
 main()
