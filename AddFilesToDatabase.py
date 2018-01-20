@@ -43,3 +43,5 @@ def main():
         handle_all_files()
     except:
         pass
+
+main()
