@@ -26,11 +26,16 @@ def get_new_file_name():
         seed_file.write(str(seed + 1))
     random.seed(seed)
     return str(random.randrange(0, 10000000000))
-            
-def add_file_data_to_database(file_type, file_new_name):
+    
+def add_file_data_to_database(file_name, file_new_name):
     tree = ET.parse("C:\\Users\\Jamie\\Desktop\\Gifs\\Database\\FileData.xml")
     root = tree.getroot()
-    new_element = ET.Element("file", {'date': str(datetime.now()), 'name': file_new_name, 'type': file_type})
+    new_element = ET.Element("file", {'date': str(datetime.now()), 'name': file_new_name})
+    tags = os.path.splitext(file_name)[0].split()
+    for tag in tags:
+        tag_element = ET.Element("tag")
+        tag_element.text = tag
+        new_element.append(tag_element)     
     root.append(new_element)
     tree.write("C:\\Users\\Jamie\\Desktop\\Gifs\\Database\\FileData.xml", xml_declaration=True)
     
