@@ -3,8 +3,12 @@ import email
 import time
 from datetime import datetime
 from dateutil.parser import parse
-from smtplib import SMTP
 import smtplib
+from email.mime.multipart import MIMEMultipart
+import os
+from mimetypes import guess_type
+from email.mime.base import MIMEBase
+from email.encoders import encode_base64
    
 def last_email():
     server= imaplib.IMAP4_SSL("imap.gmail.com")
@@ -33,59 +37,40 @@ def write_last_startup_time_to_file(date):
 def search_for_matching_gif(tags):
     return "9460750496.jpg"
 
-def test_email():
-    TO = 'bickersjamie@googlemail.com'
-    SUBJECT = 'TEST MAIL'
-    TEXT = 'Here is a message from python.'
-    
-    # Gmail Sign In
+def construct_email_message(tags):
+    message = MIMEMultipart()
+    message["Subject"] = 'Requested Gif'
+    message['From'] = "jamiebickerspcmanager@googlemail.com"
+    message['To'] = 'bickersjamie@googlemail.com'
+        
+    file_name = search_for_matching_gif(tags)
+    mimetype, encoding = guess_type(file_name)
+    mimetype = mimetype.split('/', 1)
+    with open("/" + os.path.join("Users", "Jamie", "Desktop", "Gifs", "Handled", file_name), 'rb') as file_t:
+        attachment = MIMEBase(mimetype[0], mimetype[1])
+        attachment.set_payload(file_t.read())
+        file_t.close()
+        encode_base64(attachment)
+        attachment.add_header('Content-Disposition', 'attachment', file_name=os.path.basename(file_name))
+        message.attach(attachment)
+        
+    return message
+
+def search_for_gif_and_send(tags):
     gmail_sender = "jamiebickerspcmanager@googlemail.com"
-    gmail_passwd = 'yM05YkJWGirq'
-    
+    gmail_password = 'yM05YkJWGirq'
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
     server.starttls()
-    server.login(gmail_sender, gmail_passwd)
-    
-    BODY = '\r\n'.join(['To: %s' % TO,
-                        'From: %s' % gmail_sender,
-                        'Subject: %s' % SUBJECT,
-                        '', TEXT])
+    server.login(gmail_sender, gmail_password)
+    message = construct_email_message(tags)
     
     try:
-        server.sendmail(gmail_sender, [TO], BODY)
-        print ('email sent')
+        server.send_message(message)
     except:
-        print ('error sending mail')
+        pass
     
     server.quit()
-        
-def search_for_gif_and_send(tags):
-    file_name = search_for_matching_gif(tags)
-    TO = ["jamie@jamiebickers.com"]
-    FROM = "jamiebickerspcmanager@googlemail.com"
-#    email_text = """\  
-#    From: %s  
-#    To: %s  
-#    Subject: %s
-#    
-#    %s
-#    """ % (FROM, TO, "hello", "world")
-
-    message = """\
-    From: %s
-    To: %s
-    Subject: %s
-    
-    %s
-    """ % (FROM, ", ".join(TO), "hello", file_name)
-    
-    print(message)
-    server = SMTP("smtp.gmail.com", 587)
-    server.ehlo()
-    server.starttls()
-    server.login(FROM, "yM05YkJWGirq")
-    server.sendmail(FROM, TO, message)
 
 def main():
     try:
@@ -108,7 +93,7 @@ def main():
 
 #main()
 #search_for_gif_and_send(["a", "b", "c"])
-test_email()
+search_for_gif_and_send(["a", "b", "c"])
 
 class EmailData:
     def __init__(self, time, tags):
