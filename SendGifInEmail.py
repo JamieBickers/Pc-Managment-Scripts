@@ -9,6 +9,7 @@ import os
 from mimetypes import guess_type
 from email.mime.base import MIMEBase
 from email.encoders import encode_base64
+import xml.etree.ElementTree as ET
    
 def last_email():
     server= imaplib.IMAP4_SSL("imap.gmail.com")
@@ -25,28 +26,53 @@ def last_email():
     return EmailData(date_object, subject)
 
 def read_last_startup_time_from_file():
-    with open("/home/pi/Desktop/GifsHandledTimes.txt") as file:
+    #with open("/home/pi/Desktop/GifsHandledTimes.txt") as file:
+    with open("/" + os.path.join("Users", "Jamie", "Desktop", "TestTimes.txt")) as file:
         date = file.read()
         return parse(date)
         
 def write_last_startup_time_to_file(date):
-    with open("/home/pi/Desktop/GifsHandledTimes.txt", "w") as file:
+    #with open("/home/pi/Desktop/GifsHandledTimes.txt", "w") as file:
+    with open("/" + os.path.join("Users", "Jamie", "Desktop", "TestTimes.txt"), "w") as file:
         file.write(str(date))
-        
-#stub
-def search_for_matching_gif(tags):
-    return "9460750496.jpg"
+    
+# return "" if no match is found
+def file_with_max_score(scores):
+    best_score = max(scores.values())
+    if best_score == 0:
+        return ""
+    for file in scores.keys():
+        if scores[file] == best_score:
+            return file
 
-def construct_email_message(tags):
+def search_for_matching_gif(tags):
+    tree = ET.parse("/" + os.path.join("Users", "Jamie", "Desktop", "Gifs", "Database", "FileData.xml"))
+    root = tree.getroot()
+    scores = {}
+    for entry in root:
+        scores[entry.attrib["name"]] = 0
+        for child in entry:
+            if child.text in tags:
+                scores[entry.attrib["name"]] += 1
+    return file_with_max_score(scores)
+
+def construct_email_message(tags):      
+    file_name = search_for_matching_gif(tags)
+    if (file_name == ""):
+        file_to_attach = "" + os.path.join("Users", "Jamie", "Desktop", "Gifs", "Database", "FileData.xml")
+        subject = "No Match Found"
+    else:
+        file_to_attach = "/" + os.path.join("Users", "Jamie", "Desktop", "Gifs", "Handled", file_name)
+        subject = 'Requested Gif'
+        
     message = MIMEMultipart()
-    message["Subject"] = 'Requested Gif'
+    message["Subject"] = subject
     message['From'] = "jamiebickerspcmanager@googlemail.com"
     message['To'] = 'bickersjamie@googlemail.com'
         
-    file_name = search_for_matching_gif(tags)
-    mimetype, encoding = guess_type(file_name)
+    mimetype, encoding = guess_type(file_to_attach)
     mimetype = mimetype.split('/', 1)
-    with open("/" + os.path.join("Users", "Jamie", "Desktop", "Gifs", "Handled", file_name), 'rb') as file_t:
+    with open(file_to_attach, 'rb') as file_t:
         attachment = MIMEBase(mimetype[0], mimetype[1])
         attachment.set_payload(file_t.read())
         file_t.close()
@@ -65,10 +91,10 @@ def search_for_gif_and_send(tags):
     server.login(gmail_sender, gmail_password)
     message = construct_email_message(tags)
     
-    try:
-        server.send_message(message)
-    except:
-        pass
+    #try:
+    server.send_message(message)
+    #except:
+        #pass
     
     server.quit()
 
@@ -91,9 +117,7 @@ def main():
         
         time.sleep(10)
 
-#main()
-#search_for_gif_and_send(["a", "b", "c"])
-search_for_gif_and_send(["a", "b", "c"])
+main()
 
 class EmailData:
     def __init__(self, time, tags):
