@@ -10,6 +10,8 @@ import imaplib
 import email
 from dateutil.parser import parse
 from multiprocessing import Process
+import requests
+import json
 
 path_of_last_handled_time = "/" + os.path.join("Users", "Jamie", "Desktop", "PcManagmentScripts", "LastHandledTime.txt")
 path_of_gifs_folder = "/" + os.path.join("Users", "Jamie", "Desktop", "Gifs")
@@ -59,7 +61,7 @@ def move_to_pi_and_delete():
     subprocess.Popen(["powershell.exe", ".\MoveFilesToPiAndDelete.ps1"])
             
 def listen_for_new_files():
-    for i in range(0, 360):
+    for _ in range(0, 360):
         files = all_files()
         try:
             handle_all_files(files)
@@ -104,9 +106,42 @@ def act_on_email(parameters):
         elif parameter == "sleep" or parameter == "hibernate":
             os.system("shutdown.exe /h")
 
+def get_last_action():
+    url = "https://jamie-bickers-personal-website.herokuapp.com/api/private/getPcState"
+    data = {"AuthorizationDetails": {"Username": "bickersjamie@googlemail.com", "Password": "5KofF3!W^1NQ"},
+            "Actions": ["shutdown", "sleep", "hibernate"]}
+    header = {'content-type': 'application/json'}
+    request = requests.post(url, data=json.dumps(data), headers=header)
+    print(request.content)
+    
+# helper for debugging only
+def send_action():
+    url = "https://jamie-bickers-personal-website.herokuapp.com/api/private/pcState"
+    data = {"AuthorizationDetails": {"Username": "bickersjamie@googlemail.com", "Password": "PASSWORD"},
+            "Action": "shutdown"}
+    header = {'content-type': 'application/json'}
+    request = requests.post(url, data=json.dumps(data), headers=header)
+    print(request)
+
+def carry_out_action(action):
+    if action == "shutdown":
+        os.system("shutdown -s")
+    elif action == "sleep" or action == "hibernate":
+        os.system("shutdown.exe /h")
+    
+def listen_for_actions():
+    for _ in range(0, 60):
+        try:
+            last_action = get_last_action()
+            carry_out_action(last_action)
+        except:
+            pass
+
+        time.sleep(60)
+
 def listen_for_emails():
     last_handled_time = read_last_email_time_from_file()
-    for i in range(0, 60):
+    for _ in range(0, 60):
         try:
             last_email = get_last_email()
             time_difference = datetime.now()-last_email.time
