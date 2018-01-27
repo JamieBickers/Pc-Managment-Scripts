@@ -106,18 +106,18 @@ def act_on_email(parameters):
         elif parameter == "sleep" or parameter == "hibernate":
             os.system("shutdown.exe /h")
 
-def get_last_action():
+def get_last_action(password):
     url = "https://jamie-bickers-personal-website.herokuapp.com/api/private/getPcState"
-    data = {"AuthorizationDetails": {"Username": "bickersjamie@googlemail.com", "Password": "5KofF3!W^1NQ"},
+    data = {"AuthorizationDetails": {"Username": "bickersjamie@googlemail.com", "Password": password},
             "Actions": ["shutdown", "sleep", "hibernate"]}
     header = {'content-type': 'application/json'}
     request = requests.post(url, data=json.dumps(data), headers=header)
     print(request.content)
     
 # helper for debugging only
-def send_action():
+def send_action(password):
     url = "https://jamie-bickers-personal-website.herokuapp.com/api/private/pcState"
-    data = {"AuthorizationDetails": {"Username": "bickersjamie@googlemail.com", "Password": "PASSWORD"},
+    data = {"AuthorizationDetails": {"Username": "bickersjamie@googlemail.com", "Password": password},
             "Action": "shutdown"}
     header = {'content-type': 'application/json'}
     request = requests.post(url, data=json.dumps(data), headers=header)
@@ -128,11 +128,17 @@ def carry_out_action(action):
         os.system("shutdown -s")
     elif action == "sleep" or action == "hibernate":
         os.system("shutdown.exe /h")
+        
+def read_password_from_file():
+    with open("Password.txt") as file:
+        password = file.read()
+    return password
     
 def listen_for_actions():
+    password = read_password_from_file()
     for _ in range(0, 60):
         try:
-            last_action = get_last_action()
+            last_action = get_last_action(password)
             carry_out_action(last_action)
         except:
             pass
