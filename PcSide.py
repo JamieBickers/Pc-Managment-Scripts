@@ -112,13 +112,14 @@ def get_last_action(password):
             "Actions": ["shutdown", "sleep", "hibernate"]}
     header = {'content-type': 'application/json'}
     request = requests.post(url, data=json.dumps(data), headers=header)
-    print(request.content)
+    return json.loads(request.content)
     
 # helper for debugging only
-def send_action(password):
+def send_action():
+    password = read_password_from_file()
     url = "https://jamie-bickers-personal-website.herokuapp.com/api/private/pcState"
     data = {"AuthorizationDetails": {"Username": "bickersjamie@googlemail.com", "Password": password},
-            "Action": "shutdown"}
+            "Action": "sleep"}
     header = {'content-type': 'application/json'}
     request = requests.post(url, data=json.dumps(data), headers=header)
     print(request)
