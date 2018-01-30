@@ -24,7 +24,7 @@ SERVER_PASSWORD = read_password_from_file()
 
 def standard_post_server_call(route_extension, body=""):
     """Standard server call, returns empty string if response is empty."""
-    url = f"https://jamie-bickers-personal-website.herokuapp.com/api/private/{route_extension}"
+    url = "https://jamie-bickers-personal-website.herokuapp.com/api/private/" + route_extension
     body["password"] = SERVER_PASSWORD
     header = {'content-type': 'application/json'}
     request = requests.post(url, data=json.dumps(body), headers=header)
