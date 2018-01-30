@@ -39,7 +39,7 @@ def get_new_file_name():
     return str(random.randrange(0, 10000000000))
 
 def add_file_data_to_database(file_name, file_new_name):
-    """Adds a file to teh database."""
+    """Adds a file to the database."""
     path_of_database = os.path.join(PATH_OF_GIFS_FOLDER, "Database", "FileData.xml")
     tree = ET.parse(path_of_database)
     root = tree.getroot()
