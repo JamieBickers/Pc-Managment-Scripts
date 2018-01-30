@@ -6,14 +6,10 @@ import shutil
 import xml.etree.ElementTree as ET
 import time
 import subprocess
-import imaplib
-import email
-from dateutil.parser import parse
 from multiprocessing import Process
 import requests
 import json
 
-path_of_last_handled_time = "/" + os.path.join("Users", "Jamie", "Desktop", "PcManagmentScripts", "LastHandledTime.txt")
 path_of_gifs_folder = "/" + os.path.join("Users", "Jamie", "Desktop", "Gifs")
 
 def all_files():
@@ -71,40 +67,6 @@ def listen_for_new_files():
           
     if len(os.listdir(os.path.join(path_of_gifs_folder, "Handled"))) > 5:
         move_to_pi_and_delete()
-    
-def get_last_email():
-    server= imaplib.IMAP4_SSL("imap.gmail.com")
-    server.login("jamiebickerspcmanager@googlemail.com", "yM05YkJWGirq")
-    server.select()
-    response, emails = server.search(None, "ALL")
-    first = emails[0].split()[-1]
-    response, data = server.fetch(first, "(RFC822)")
-    decoded = data[0][1].decode("utf-8")
-    message = email.message_from_string(decoded)
-    unformatted_date = message["Date"].replace(",", " ").replace(":", " ")[:-6] # put it into the format that can be read below
-    date = datetime.strptime(unformatted_date, "%a %d %b %Y %H %M %S")
-    subject = message["Subject"]
-    return EmailData(date, subject)
-
-def read_last_email_time_from_file():
-    try:
-        with open(path_of_last_handled_time) as file:
-            date = file.read()
-            return parse(date)
-    except:
-        return None
-        
-def write_last_email_time_to_file(date):
-    with open(path_of_last_handled_time, "w") as file:
-        file.write(str(date))
-        
-def act_on_email(parameters):
-    if len(parameters) == 1:
-        parameter = parameters[0].lower()
-        if parameter == "shutdown":
-            os.system("shutdown -s")
-        elif parameter == "sleep" or parameter == "hibernate":
-            os.system("shutdown.exe /h")
 
 def get_last_action(password):
     url = "https://jamie-bickers-personal-website.herokuapp.com/api/private/getPcState"
@@ -113,16 +75,6 @@ def get_last_action(password):
     request = requests.post(url, data=json.dumps(data), headers=header)
     return json.loads(request.content) if request.content else ""
     
-# helper for debugging only
-def send_action():
-    password = read_password_from_file()
-    url = "https://jamie-bickers-personal-website.herokuapp.com/api/private/pcState"
-    data = {"AuthorizationDetails": {"Username": "bickersjamie@googlemail.com", "Password": password},
-            "Action": "sleep"}
-    header = {'content-type': 'application/json'}
-    request = requests.post(url, data=json.dumps(data), headers=header)
-    print(request)
-
 def carry_out_action(action):
     if action == "shutdown":
         os.system("shutdown -s")
@@ -136,42 +88,19 @@ def read_password_from_file():
     
 def listen_for_actions():
     password = read_password_from_file()
-    for _ in range(0, 360):
-        # try:
-        last_action = get_last_action(password)
-        print("Action is :" + last_action)
-        carry_out_action(last_action)
-        # except:
-        #     pass
-
-        time.sleep(5)
-
-def listen_for_emails():
-    last_handled_time = read_last_email_time_from_file()
     for _ in range(0, 60):
         try:
-            last_email = get_last_email()
-            time_difference = datetime.now()-last_email.time
-            if time_difference.total_seconds() < 180 and last_email.time != last_handled_time:
-                last_handled_time = last_email.time
-                write_last_email_time_to_file(last_email.time)
-                act_on_email(last_email.parameters)
+            last_action = get_last_action(password)
+            carry_out_action(last_action)
         except:
             pass
-        
+
         time.sleep(60)
-        
-class EmailData:
-    def __init__(self, time, subject):
-        self.time = time
-        self.parameters = subject.split(" ")
 
-# if __name__ == "__main__":
-#     action_listener = Process(target=listen_for_actions)
-#     action_listener.start()
-#     file_listener = Process(target=listen_for_new_files)
-#     file_listener.start()
-#     action_listener.join()
-#     file_listener.join()
-
-listen_for_actions()
+if __name__ == "__main__":
+    action_listener = Process(target=listen_for_actions)
+    action_listener.start()
+    file_listener = Process(target=listen_for_new_files)
+    file_listener.start()
+    action_listener.join()
+    file_listener.join()
