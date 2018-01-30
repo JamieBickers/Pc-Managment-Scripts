@@ -108,11 +108,10 @@ def act_on_email(parameters):
 
 def get_last_action(password):
     url = "https://jamie-bickers-personal-website.herokuapp.com/api/private/getPcState"
-    data = {"AuthorizationDetails": {"Username": "bickersjamie@googlemail.com", "Password": password},
-            "Actions": ["shutdown", "sleep", "hibernate"]}
+    data = {"Password": password, "Actions": ["shutdown", "sleep", "hibernate"]}
     header = {'content-type': 'application/json'}
     request = requests.post(url, data=json.dumps(data), headers=header)
-    return json.loads(request.content)
+    return json.loads(request.content) if request.content else ""
     
 # helper for debugging only
 def send_action():
@@ -137,14 +136,15 @@ def read_password_from_file():
     
 def listen_for_actions():
     password = read_password_from_file()
-    for _ in range(0, 60):
-        try:
-            last_action = get_last_action(password)
-            carry_out_action(last_action)
-        except:
-            pass
+    for _ in range(0, 360):
+        # try:
+        last_action = get_last_action(password)
+        print("Action is :" + last_action)
+        carry_out_action(last_action)
+        # except:
+        #     pass
 
-        time.sleep(60)
+        time.sleep(5)
 
 def listen_for_emails():
     last_handled_time = read_last_email_time_from_file()
@@ -166,10 +166,12 @@ class EmailData:
         self.time = time
         self.parameters = subject.split(" ")
 
-if __name__ == "__main__":
-    email_listener = Process(target=listen_for_emails)
-    email_listener.start()
-    file_listener = Process(target=listen_for_new_files)
-    file_listener.start()
-    email_listener.join()
-    file_listener.join()
+# if __name__ == "__main__":
+#     action_listener = Process(target=listen_for_actions)
+#     action_listener.start()
+#     file_listener = Process(target=listen_for_new_files)
+#     file_listener.start()
+#     action_listener.join()
+#     file_listener.join()
+
+listen_for_actions()
