@@ -16,7 +16,7 @@ import RPi.GPIO as GPIO
 def read_password_from_file():
     """Read the password needed for server authentication from file."""
     with open("Password.txt") as file:
-        password = file.read()
+        password = file.read().strip()
     return password
 
 PATH_OF_DATABASE = "/" + os.path.join("home", "pi", "Desktop", "Gifs")
@@ -28,7 +28,7 @@ def standard_post_server_call(route_extension, body=""):
     body["password"] = SERVER_PASSWORD
     header = {'content-type': 'application/json'}
     request = requests.post(url, data=json.dumps(body), headers=header)
-    return json.loads(request.content) if request.content else ""
+    return json.loads(request.content.decode("utf-8")) if request.content else ""
 
 #=========================================================================================================
 
@@ -99,8 +99,6 @@ def listen_for_actions():
             #pass
 
         time.sleep(10)
-
-listen_for_actions()
 
 #=======================================================================================
 
@@ -181,8 +179,6 @@ def send_files_on_request():
         #except:
             #pass
         time.sleep(10)
-
-send_files_on_request()
 
 #=========================================================================================
 
