@@ -1,5 +1,4 @@
 import os
-from os.path import isfile
 from datetime import datetime
 import random
 import shutil
@@ -7,19 +6,14 @@ import xml.etree.ElementTree as ET
 import time
 import subprocess
 from multiprocessing import Process
-import json
-import requests
+import utilities
 
 PATH_OF_GIFS_FOLDER = "/" + os.path.join("Users", "Jamie", "Desktop", "Gifs")
+SERVER_PASSWORD = utilities.read_password_from_file()
 
-def all_files():
+def all_unhandled_files():
     """Returns all files in gifs folder."""
-    all_files_and_dirs = os.listdir(PATH_OF_GIFS_FOLDER)
-    no_dirs = []
-    for f in all_files_and_dirs:
-        if isfile(os.path.join(PATH_OF_GIFS_FOLDER, f)):
-            no_dirs.append(f)
-    return no_dirs
+    return utilities.all_files(PATH_OF_GIFS_FOLDER)
 
 def move_and_rename_file(file, new_name):
     """Renames the file and moves it to the 'Handled' folder."""
@@ -67,7 +61,7 @@ def move_to_pi_and_delete():
 def listen_for_new_files():
     """Repeatedly checks gifs folder for new files and handles them."""
     for _ in range(0, 360):
-        files = all_files()
+        files = all_unhandled_files()
         try:
             handle_all_files(files)
             time.sleep(10)
@@ -77,13 +71,10 @@ def listen_for_new_files():
     if len(os.listdir(os.path.join(PATH_OF_GIFS_FOLDER, "Handled"))) > 5:
         move_to_pi_and_delete()
 
-def get_last_action(password):
+def get_last_action():
     """Finds the last action request recorded on the server."""
-    url = "https://jamie-bickers-personal-website.herokuapp.com/api/private/getPcState"
-    data = {"Password": password, "Actions": ["shutdown", "sleep", "hibernate"]}
-    header = {'content-type': 'application/json'}
-    request = requests.post(url, data=json.dumps(data), headers=header)
-    return json.loads(request.content) if request.content else ""
+    data = {"Actions": ["shutdown", "sleep", "hibernate"]}
+    return utilities.standard_post_server_call("getPcState", SERVER_PASSWORD, data)
 
 def carry_out_action(action):
     """Shuts this pc down or puts it to sleep."""
@@ -92,18 +83,11 @@ def carry_out_action(action):
     elif action == "sleep" or action == "hibernate":
         os.system("shutdown.exe /h")
 
-def read_password_from_file():
-    """Read the password needed for server authentication from file."""
-    with open("Password.txt") as file:
-        password = file.read()
-    return password
-
 def listen_for_actions():
     """Repeatedly listens for new actions on the server and acts on them."""
-    password = read_password_from_file()
     for _ in range(0, 60):
         try:
-            last_action = get_last_action(password)
+            last_action = get_last_action()
             carry_out_action(last_action)
         except:
             pass

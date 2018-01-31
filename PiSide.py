@@ -1,6 +1,4 @@
 import os
-from os.path import isfile
-import json
 import shutil
 import xml.etree.ElementTree as ET
 import time
@@ -10,36 +8,19 @@ from email.mime.base import MIMEBase
 from email.encoders import encode_base64
 from email.mime.multipart import MIMEMultipart
 from multiprocessing import Process
-import requests
+import utilities
 import RPi.GPIO as GPIO
 
-def read_password_from_file():
-    """Read the password needed for server authentication from file."""
-    with open("Password.txt") as file:
-        password = file.read().strip()
-    return password
-
 PATH_OF_DATABASE = "/" + os.path.join("home", "pi", "Desktop", "Gifs")
-SERVER_PASSWORD = read_password_from_file()
+SERVER_PASSWORD = utilities.read_password_from_file()
 
-def standard_post_server_call(route_extension, body=""):
-    """Standard server call, returns empty string if response is empty."""
-    url = "https://jamie-bickers-personal-website.herokuapp.com/api/private/" + route_extension
-    body["password"] = SERVER_PASSWORD
-    header = {'content-type': 'application/json'}
-    request = requests.post(url, data=json.dumps(body), headers=header)
-    return json.loads(request.content.decode("utf-8")) if request.content else ""
-
-#=========================================================================================================
+def server_call(route_extension, body=""):
+    """Wrapper for the server call with pre read password."""
+    return utilities.standard_post_server_call(route_extension, SERVER_PASSWORD, body)
 
 def all_new_files():
     """Returns all files that have not been handled."""
-    all_files_and_dirs = os.listdir(PATH_OF_DATABASE)
-    no_dirs = []
-    for f in all_files_and_dirs:
-        if isfile(os.path.join(PATH_OF_DATABASE, f)):
-            no_dirs.append(f)
-    return no_dirs
+    return utilities.all_files(PATH_OF_DATABASE)
 
 def move_file(file):
     """Moves a file to the 'Handled' folder."""
@@ -93,7 +74,7 @@ def listen_for_actions():
     GPIO.output(18, GPIO.HIGH)
     for _ in range(0, 360):
         #try:
-        last_action = standard_post_server_call("getPcState", {"Actions": ["startup"]})
+        last_action = server_call("getPcState", {"Actions": ["startup"]})
         carry_out_action(last_action)
         #except:
             #pass
@@ -172,7 +153,7 @@ def send_files_on_request():
     """Repeatedly check for file requests and execute them."""
     for _ in range(0, 360):
         #try:
-        all_file_requests = standard_post_server_call("getGifs")
+        all_file_requests = server_call("getGifs")
         if all_file_requests:
             for tags in all_file_requests:
                 search_for_gif_and_send(tags)
