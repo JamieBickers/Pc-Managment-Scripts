@@ -40,7 +40,6 @@ def add_file_to_database(file_name):
             pi_root.append(child)
             pi_tree.write(os.path.join(PATH_OF_DATABASE, "Database", "PiFileData.xml"), xml_declaration=True)
             return
-    raise ValueError("File is not in database.")
 
 def handle_all_files():
     """Move all files and add them to the database."""
