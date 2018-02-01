@@ -14,7 +14,7 @@ import RPi.GPIO as GPIO
 PATH_OF_DATABASE = "/" + os.path.join("home", "pi", "Desktop", "Gifs")
 SERVER_PASSWORD = utilities.read_password_from_file()
 
-def server_call(route_extension, body=""):
+def server_call(route_extension, body={}):
     """Wrapper for the server call with pre read password."""
     return utilities.standard_post_server_call(route_extension, SERVER_PASSWORD, body)
 
