@@ -175,3 +175,5 @@ def run_loops_in_parallel():
         action_listener.join()
         file_listener.join()
         file_request_listener.join()
+
+run_loops_in_parallel()
