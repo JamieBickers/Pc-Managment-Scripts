@@ -43,13 +43,13 @@ def add_file_to_database(file_name):
 
 def handle_all_files():
     """Move all files and add them to the database."""
-    #try:
-    files = all_new_files()
-    for file in files:
-        add_file_to_database(file)
-        move_file(file)
-    #except:
-        #pass
+    try:
+        files = all_new_files()
+        for file in files:
+            add_file_to_database(file)
+            move_file(file)
+    except:
+        pass
 
 #=================================================================================
 
@@ -72,11 +72,11 @@ def listen_for_actions():
     GPIO.setup(18, GPIO.OUT)
     GPIO.output(18, GPIO.HIGH)
     for _ in range(0, 360):
-        #try:
-        last_action = server_call("getPcState", {"Actions": ["startup"]})
-        carry_out_action(last_action)
-        #except:
-            #pass
+        try:
+            last_action = server_call("getPcState", {"Actions": ["startup"]})
+            carry_out_action(last_action)
+        except:
+            pass
 
         time.sleep(10)
 
@@ -118,7 +118,7 @@ def construct_email_message(tags):
     message['From'] = "jamiebickerspcmanager@googlemail.com"
     message['To'] = 'bickersjamie@googlemail.com'
 
-    mimetype, encoding = guess_type(file_to_attach)
+    mimetype, _ = guess_type(file_to_attach)
     mimetype = mimetype.split('/', 1)
     with open(file_to_attach, 'rb') as file_t:
         attachment = MIMEBase(mimetype[0], mimetype[1])
@@ -141,23 +141,23 @@ def search_for_gif_and_send(tags):
     server.login(gmail_sender, gmail_password)
     message = construct_email_message(tags)
 
-    #try:
-    server.send_message(message)
-    #except:
-        #pass
+    try:
+        server.send_message(message)
+    except:
+        pass
 
     server.quit()
 
 def send_files_on_request():
     """Repeatedly check for file requests and execute them."""
     for _ in range(0, 360):
-        #try:
-        all_file_requests = server_call("getGifs")
-        if all_file_requests:
-            for tags in all_file_requests:
-                search_for_gif_and_send(tags)
-        #except:
-            #pass
+        try:
+            all_file_requests = server_call("getGifs")
+            if all_file_requests:
+                for tags in all_file_requests:
+                    search_for_gif_and_send(tags)
+        except:
+            pass
         time.sleep(10)
 
 #=========================================================================================
